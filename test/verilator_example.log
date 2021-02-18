@@ -1,0 +1,30 @@
+%Warning-IMPLICIT: xxxxx_zzzzz.v:157:16: Signal definition not found, creating implicitly: 'vvvvv_w_cnt_inc'
+                                                                                                                        : ... Suggested alternative: 'vvvvv_w_cnt'
+  157 |         assign vvvvv_w_cnt_inc = vvvvv2kkkkk_fifo_me & !kkkkk_fifo2vvvvv_busy;
+      |                ^~~~~~~~~~~~
+                   ... Use "/* verilator lint_off IMPLICIT */" and lint_on around source to disable this message.
+%Warning-IMPLICIT: xxxxx_zzzzz.v:187:16: Signal definition not found, creating implicitly: 'vvvvv_r_cnt_inc'
+                                                                                                                        : ... Suggested alternative: 'vvvvv_w_cnt_inc'
+  187 |         assign vvvvv_r_cnt_inc = kkkkk_fifo2vvvvv_val_data;
+      |                ^~~~~~~~~~~~
+%Warning-WIDTH: xxxxx_yyyyy.v:117:26: Operator ASSIGN expects 3 bits on the Assign RHS, but Assign RHS's CONST '1'bx' generates 1 bits.
+                                                                                                                   : ... In instance xxxxx_wwwww.genblk3.xxxxx32_to_xxxxx256.arb256
+  117 |       bbb_ccccccccc      = 1'bx; 
+      |                          ^
+%Warning-WIDTH: xxxxx_yyyyy.v:120:19: Operator ASSIGN expects 3 bits on the Assign RHS, but Assign RHS's VARREF 'i' generates 32 bits.
+                                                                                                                   : ... In instance xxxxx_wwwww.genblk3.xxxxx32_to_xxxxx256.arb256
+  120 |     bbb_ccccccccc = i;
+      |                   ^
+%Warning-WIDTH: xxxxx_yyyyy.v:176:98: Operator EQ expects 32 bits on the LHS, but LHS's SEL generates 5 bits.
+                                                                                                                   : ... In instance xxxxx_wwwww.genblk3.xxxxx32_to_xxxxx256.arb256
+  176 |    wire [ZZZZZ_WIDTH-1:0] qqqqq_rd_ptr_next = (qqqqq_rd_ptr[ZZZZZ_WIDTH-1:0] == KKKKK-1) ?  
+      |                                                                              ^~
+%Warning-WIDTH: xxxxx_yyyyy.v:178:98: Operator EQ expects 32 bits on the LHS, but LHS's SEL generates 5 bits.
+                                                                                                                   : ... In instance xxxxx_wwwww.genblk3.xxxxx32_to_xxxxx256.arb256
+  178 |    wire [ZZZZZ_WIDTH-1:0] qqqqq_wr_ptr_next = (qqqqq_wr_ptr[ZZZZZ_WIDTH-1:0] == KKKKK-1) ?  
+      |                                                                              ^~
+%Warning-WIDTH: xxxxx_yyyyy.v:201:9: Operator EQ expects 32 bits on the RHS, but RHS's ARRAYSEL generates 3 bits.
+                                                                                                                  : ... In instance xxxxx_wwwww.genblk3.xxxxx32_to_xxxxx256.arb256
+  201 |   if (j == qqqqq[qqqqq_rd_ptr])
+      |         ^~
+%Error: Exiting due to 7 warning(s)
