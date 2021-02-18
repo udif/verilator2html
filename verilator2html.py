@@ -3,7 +3,10 @@ import sys
 import os
 
 if len(sys.argv) != 3:
-    print("Usage: {} <infile> <outfile>".format(sys.argv[0]))
+    print("""
+Usage: {} <Verilator logfile> <HTML output file>
+logfile may be replaced with '-' to take input from stdin instead
+""".format(sys.argv[0]))
     sys.exit()
 
 html_h = """
@@ -63,16 +66,22 @@ html_t = """
 </body>
 </html>
 """
+def convert_log(flog, fhtml):
+  print(html_h, file=fhtml)
+  for l in flog.readlines():
+    if not l.startswith('%'):
+      continue
+    lw = ''
+    for w in l.split(':', 4):
+      lw += '<td>{}</td>'.format(w)
+    print('<tr>{}</tr>'.format(lw), file=fhtml)
+  print(html_t, file=fhtml)
 
-with open(sys.argv[1], "r") as fh:
-    with open(sys.argv[2], "w") as fl:
-        print(html_h, file=fl)
-        for l in fh.readlines():
-            if not l.startswith('%'):
-                continue
-            lw = ''
-            for w in l.split(':', 4):
-                lw += '<td>{}</td>'.format(w)
-            print('<tr>{}</tr>'.format(lw), file=fl)
-        print(html_t, file=fl)
+with open(sys.argv[2], "w") as fhtml:
+  if sys.argv[1] == "-":
+    convert_log(sys.stdin, fhtml)
+  else:
+    with open(sys.argv[1], "r") as flog:
+      convert_log(flog, fhtml)
+
 
