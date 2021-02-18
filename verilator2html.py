@@ -18,9 +18,9 @@ html_h = """
     <!-- Load jQuery -->
   <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
   <!-- Load the plugin bundle. -->
-  <script src="https://raw.githubusercontent.com/chestercharles/excel-bootstrap-table-filter/master/dist/excel-bootstrap-table-filter-bundle.min.js"></script>
+  <script src="https://udif.github.io/verilator2html/dist/excel-bootstrap-table-filter-bundle.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="https://raw.githubusercontent.com/chestercharles/excel-bootstrap-table-filter/master/dist/excel-bootstrap-table-filter-style.css" />
+  <link rel="stylesheet" href="https://udif.github.io/verilator2html/dist/excel-bootstrap-table-filter-style.css" />
   <style>
   body { background-color:#fafafa;}
   .container { margin:150px auto;}
