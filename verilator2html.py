@@ -3,6 +3,7 @@ import sys
 import os
 import argparse
 import html
+import re
 
 parser = argparse.ArgumentParser(description="Parse a logfile and creates a sortable/filterable/searchable HTML table.")
 parser.add_argument('infile', metavar='<input file>', type=str, help="file to read, if '-', stdin is used")
@@ -65,42 +66,33 @@ html_t = """
 </body>
 </html>
 """
+class log :
+  def __init__(self, header, filter, split_func):
+    self.header = header
+    self.max_len = len(header)
+    self.filter = filter
+    self.split_func = split_func
 
-verilator_header =("Type", "File", "Line", "Col", "Message")
-def convert_verilator_log(flog, fhtml):
-  max_len = len(verilator_header)
-  print(html_h.format("".join(["<th>"+i+"</th>" for i in verilator_header])), file=fhtml)
-  for l in flog.readlines():
-    if not l.startswith('%'):
-      continue
-    lw = ''
-    lp = (l.split(':') + [''] * max_len)[:max_len]
-    for w in lp:
-      lw += '<td>{}</td>'.format(html.escape(w))
-    print('<tr>{}</tr>'.format(lw), file=fhtml)
-  print(html_t, file=fhtml)
+  def gen_html(self, flog, fhtml):
+    print(html_h.format("".join(["<th>"+i+"</th>" for i in self.header])), file=fhtml)
+    for l in flog.readlines():
+      if not re.search(self.filter, l):
+        continue
+      lp = (self.split_func(l) + [''] * self.max_len)[:self.max_len]
+      lw = ''
+      for w in lp:
+        lw += '<td>{}</td>'.format(html.escape(w))
+      print('<tr>{}</tr>'.format(lw), file=fhtml)
+    print(html_t, file=fhtml)
 
+conv_obj = {}
+conv_obj['verilator'] = log(("Type", "File", "Line", "Col", "Message"), r'^%', lambda l: l.split(':'))
+# spyglass is position based, in those position exactly (remove leading # below)
 #ID       Rule                Alias               Severity    File                                                                                                                                         Line     Wt    Message
-spyglass_header = ('ID', 'Rule', 'Alias', 'Severity', 'File', 'Line', 'Wt', 'Message')
-spyg_hdr_pos = [0, 9, 29, 49, 61, 202, 211, 217, 0]
-def convert_spyglass_log(flog, fhtml):
-  s = spyg_hdr_pos 
-  print(html_h.format("".join(["<th>"+i+"</th>" for i in spyglass_header])), file=fhtml)
-  for l in flog.readlines():
-    if not l.startswith('['):
-      continue
-    lw = ''
-    s[-1] = len(l)
-    for i in range(len(s)-1):
-      lw += '<td>{}</td>'.format(html.escape(l[s[i]:s[i+1]].strip()))
-    print('<tr>{}</tr>'.format(lw), file=fhtml)
-  print(html_t, file=fhtml)
+conv_obj['spyglass'] = log(('ID', 'Rule', 'Alias', 'Severity', 'File', 'Line', 'Wt', 'Message'), r'^\[', lambda l: [l[s:e].strip() for s,e in (lambda s: zip(s[:-1], s[1:]))([0, 9, 29, 49, 61, 202, 211, 217, 9999])])
 
 def convert_any_log(flog, fhtml):
-  if args.logtype == 'verilator':
-    convert_verilator_log(flog, fhtml)
-  elif args.logtype == 'spyglass':
-    convert_spyglass_log(flog, fhtml)
+  conv_obj[args.logtype].gen_html(flog, fhtml)
 
 def convert_log(fhtml):
   if args.infile == "-":
@@ -114,6 +106,3 @@ if args.outfile == "-":
 else:
   with open(args.outfile, "w") as fhtml:
     convert_log(fhtml)
-
-
-
