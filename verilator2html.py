@@ -68,12 +68,14 @@ html_t = """
 
 verilator_header =("Type", "File", "Line", "Col", "Message")
 def convert_verilator_log(flog, fhtml):
+  max_len = len(verilator_header)
   print(html_h.format("".join(["<th>"+i+"</th>" for i in verilator_header])), file=fhtml)
   for l in flog.readlines():
     if not l.startswith('%'):
       continue
     lw = ''
-    for w in l.split(':', 4):
+    lp = (l.split(':') + [''] * max_len)[:max_len]
+    for w in lp:
       lw += '<td>{}</td>'.format(html.escape(w))
     print('<tr>{}</tr>'.format(lw), file=fhtml)
   print(html_t, file=fhtml)
