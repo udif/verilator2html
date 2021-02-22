@@ -72,13 +72,17 @@ class log :
     self.max_len = len(header)
     self.filter = filter
     self.split_func = split_func
+    self.data = []
 
-  def gen_html(self, flog, fhtml):
-    print(html_h.format("".join(["<th>"+i+"</th>" for i in self.header])), file=fhtml)
+  def get_data(self, flog):
     for l in flog.readlines():
       if not re.search(self.filter, l):
         continue
-      lp = (self.split_func(l) + [''] * self.max_len)[:self.max_len]
+      self.data.append((self.split_func(l) + [''] * self.max_len)[:self.max_len])
+
+  def gen_html(self, fhtml):
+    print(html_h.format("".join(["<th>"+i+"</th>" for i in self.header])), file=fhtml)
+    for lp in self.data:
       lw = ''
       for w in lp:
         lw += '<td>{}</td>'.format(html.escape(w))
@@ -92,7 +96,8 @@ conv_obj['verilator'] = log(("Type", "File", "Line", "Col", "Message"), r'^%', l
 conv_obj['spyglass'] = log(('ID', 'Rule', 'Alias', 'Severity', 'File', 'Line', 'Wt', 'Message'), r'^\[', lambda l: [l[s:e].strip() for s,e in (lambda s: zip(s[:-1], s[1:]))([0, 9, 29, 49, 61, 202, 211, 217, 9999])])
 
 def convert_any_log(flog, fhtml):
-  conv_obj[args.logtype].gen_html(flog, fhtml)
+  conv_obj[args.logtype].get_data(flog)
+  conv_obj[args.logtype].gen_html(fhtml)
 
 def convert_log(fhtml):
   if args.infile == "-":
