@@ -4,6 +4,7 @@ import os
 import argparse
 import html
 import re
+import random
 
 parser = argparse.ArgumentParser(description="Parse a logfile and creates a sortable/filterable/searchable HTML table.")
 parser.add_argument('infile', metavar='<input file>', type=str, help="file to read, if '-', stdin is used")
@@ -11,6 +12,8 @@ parser.add_argument('outfile', metavar='<output file>', nargs='?', default='-', 
 #parser.add_argument("-V", "--verbose", help="Be more verbose", action="store_true")
 #parser.add_argument("-d", "--debug", help="debug flag", action='append', nargs="*")
 parser.add_argument("-l", "--logtype", help="logfile type", choices=['spyglass', 'verilator'])
+parser.add_argument("-L", "--lines", type=int, help="limit output size to N lines")
+parser.add_argument("-R", "--rlines", type=int, help="set output size to exactly N lines. randomize more lines from previous columns if needed (useful for debugging this program only))")
 args = parser.parse_args()
  
 html_h = """
@@ -69,7 +72,7 @@ html_t = """
 class log :
   def __init__(self, header, filter, split_func):
     self.header = header
-    self.max_len = len(header)
+    self.hdr_len = len(header)
     self.filter = filter
     self.split_func = split_func
     self.data = []
@@ -78,7 +81,14 @@ class log :
     for l in flog.readlines():
       if not re.search(self.filter, l):
         continue
-      self.data.append((self.split_func(l) + [''] * self.max_len)[:self.max_len])
+      self.data.append((self.split_func(l) + [''] * self.hdr_len)[:self.hdr_len])
+
+  def gen_data(self, rlines):
+    l = len(self.data)
+    for i in range(l, rlines):
+      self.data.append([])
+      for j in range(0, self.hdr_len):
+        self.data[i].append(self.data[random.randrange(l)][j])
 
   def gen_html(self, fhtml):
     print(html_h.format("".join(["<th>"+i+"</th>" for i in self.header])), file=fhtml)
@@ -96,8 +106,15 @@ conv_obj['verilator'] = log(("Type", "File", "Line", "Col", "Message"), r'^%', l
 conv_obj['spyglass'] = log(('ID', 'Rule', 'Alias', 'Severity', 'File', 'Line', 'Wt', 'Message'), r'^\[', lambda l: [l[s:e].strip() for s,e in (lambda s: zip(s[:-1], s[1:]))([0, 9, 29, 49, 61, 202, 211, 217, 9999])])
 
 def convert_any_log(flog, fhtml):
-  conv_obj[args.logtype].get_data(flog)
-  conv_obj[args.logtype].gen_html(fhtml)
+  c = conv_obj[args.logtype]
+  c.get_data(flog)
+  if args.lines:
+    c.data = c.data[:args.lines]
+  if args.rlines < len(c.data):
+    c.data = c.data[:args.rlines]
+  else:
+    c.gen_data(args.rlines)
+  c.gen_html(fhtml)
 
 def convert_log(fhtml):
   if args.infile == "-":
