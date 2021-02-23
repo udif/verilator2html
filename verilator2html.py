@@ -6,16 +6,6 @@ import html
 import re
 import random
 
-parser = argparse.ArgumentParser(description="Parse a logfile and creates a sortable/filterable/searchable HTML table.")
-parser.add_argument('infile', metavar='<input file>', type=str, help="file to read, if '-', stdin is used")
-parser.add_argument('outfile', metavar='<output file>', nargs='?', default='-', help="file to write, if '-' or no filename is given, stdout is used")
-#parser.add_argument("-V", "--verbose", help="Be more verbose", action="store_true")
-#parser.add_argument("-d", "--debug", help="debug flag", action='append', nargs="*")
-parser.add_argument("-l", "--logtype", help="logfile type", choices=['spyglass', 'verilator'])
-parser.add_argument("-L", "--lines", type=int, help="limit output size to N lines")
-parser.add_argument("-R", "--rlines", type=int, help="set output size to exactly N lines. randomize more lines from previous columns if needed (useful for debugging this program only))")
-args = parser.parse_args()
- 
 html_h = """
 <!doctype html>
 <html>
@@ -104,16 +94,28 @@ conv_obj['verilator'] = log(("Type", "File", "Line", "Col", "Message"), r'^%', l
 # spyglass is position based, in those position exactly (remove leading # below)
 #ID       Rule                Alias               Severity    File                                                                                                                                         Line     Wt    Message
 conv_obj['spyglass'] = log(('ID', 'Rule', 'Alias', 'Severity', 'File', 'Line', 'Wt', 'Message'), r'^\[', lambda l: [l[s:e].strip() for s,e in (lambda s: zip(s[:-1], s[1:]))([0, 9, 29, 49, 61, 202, 211, 217, 9999])])
+conv_obj['gcc'] = log(("File", "Line", "Col", "Type", "Message"), r':.*:.*: (warning|error|note):', lambda l: [i.strip() for i in l.split(':')])
 
+parser = argparse.ArgumentParser(description="Parse a logfile and creates a sortable/filterable/searchable HTML table.")
+parser.add_argument('infile', metavar='<input file>', type=str, help="file to read, if '-', stdin is used")
+parser.add_argument('outfile', metavar='<output file>', nargs='?', default='-', help="file to write, if '-' or no filename is given, stdout is used")
+#parser.add_argument("-V", "--verbose", help="Be more verbose", action="store_true")
+#parser.add_argument("-d", "--debug", help="debug flag", action='append', nargs="*")
+parser.add_argument("-l", "--logtype", help="logfile type", choices=list(conv_obj.keys()))
+parser.add_argument("-L", "--lines", type=int, help="limit output size to N lines")
+parser.add_argument("-R", "--rlines", type=int, help="set output size to exactly N lines. randomize more lines from previous columns if needed (useful for debugging this program only))")
+args = parser.parse_args()
+ 
 def convert_any_log(flog, fhtml):
   c = conv_obj[args.logtype]
   c.get_data(flog)
   if args.lines:
     c.data = c.data[:args.lines]
-  if args.rlines < len(c.data):
-    c.data = c.data[:args.rlines]
-  else:
-    c.gen_data(args.rlines)
+  if args.rlines:
+    if args.rlines <= len(c.data):
+      c.data = c.data[:args.rlines]
+    else:
+      c.gen_data(args.rlines)
   c.gen_html(fhtml)
 
 def convert_log(fhtml):
